@@ -1,5 +1,3 @@
-import { collection, deleteDoc, doc, setDoc } from "firebase/firestore/lite";
-import { firebaseDB } from "../../firebase/config";
 import { fileUpload } from "../../helpers/fileUpload";
 import { loadNotes } from "../../helpers/loadNotes";
 import { addNewEmptyNote, deleteNoteById, savingNewNote, setActiveNote, setImgsToActiveNote, setNotes, setSaving, updateNotes } from "./journalSlice";
@@ -12,12 +10,11 @@ export const startNewNote = () => {
 
         dispatch(savingNewNote());
 
-
         //Obtenemos el uid de nuestro store
         const { uid } = getState().auth;
 
         //Generamos nuestra nota
-        const newNote = {
+        let newNote = {
             title: '',
             body: '',
             date: new Date().getTime(),
@@ -25,11 +22,11 @@ export const startNewNote = () => {
         }
 
         //Guardamos la informacion de la nota en la base de datos
-        newNote = await axios.post(`${JOURNAL_API_URL}/newNote`, {
+        let response = await axios.post(`${JOURNAL_API_URL}/newNote`, {
             uid
         });
 
-        console.log("🚀 ~ return ~ newNote:", newNote)
+        newNote = response.data.newNote;
 
         dispatch(addNewEmptyNote(newNote));
         dispatch(setActiveNote(newNote));
@@ -74,12 +71,20 @@ export const startUploadingFiles = (files = []) => {
 
         dispatch(setSaving());
 
+        //Arreglo de promesas
+        const fileUploadPromises = [];
+
         /* LLenamos el arreglo de promesas con la correspondiente de cada file del arreglo
         para luego ejecutarlas todas juntas */
 
-        const { imgsUrls } = await axios.post(`${JOURNAL_API_URL}/uploadFiles`, {
-            files,
-        });
+        // for (const file of files) {
+        //     fileUploadPromises.push(fileUpload(file));
+        // }
+        // console.log("🚀 ~ return ~ fileUploadPromises:", fileUploadPromises)
+
+        // const imgsUrls = await Promise.all(fileUploadPromises);
+        await fileUpload(files[0]);
+        console.log("🚀 ~ return ~ imgsUrls:", imgsUrls)
         dispatch(setImgsToActiveNote(imgsUrls));
 
     }
