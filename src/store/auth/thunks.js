@@ -1,9 +1,8 @@
 import { clearNotesLogout } from "../journal/journalSlice";
 import { startLoadingNotes } from "../journal/thunks";
 import { checkingCredentials, logout, login } from "./";
+import { signInWithGoogle } from "../../firebase/providers";
 import axios from "axios";
-
-// import { startLoadingNotes } from "../store/journal";
 
 const AUTH_API_URL = "http://localhost:4000/auth";
 const USER_API_URL = "http://localhost:4001/user";
@@ -16,20 +15,17 @@ export const checkingAuthentication = () => {
 
 export const startGoogleSignIt = () => {
   return async (dispatch) => {
-    dispatch(checkingCredentials());
 
-    try {
-      const response = await axios.post(`${USER_API_URL}/google-signin`);
-      if (response.data.ok) {
-        dispatch(login(response.data));
-      } else {
-        dispatch(logout(response.data.errorMessage));
-      }
-    } catch (error) {
-      dispatch(logout("Error al iniciar sesión con Google"));
-    }
-  };
-};
+      dispatch(checkingCredentials());
+
+      const result = await signInWithGoogle();
+      console.log(result.errorMessage)
+
+      if (!result.ok) return dispatch(logout(result.errorMessage));
+
+      dispatch(login(result));
+  }
+}
 
 export const startCreatingUserWithEmailPassword = ({
   displayName,
